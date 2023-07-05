@@ -1,15 +1,24 @@
 # GITHUB Repositories Explorer
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fikhsanalatsary%2Fgithub-repositories-explorer&env=VITE_GH_SECRET)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https%3A%2F%2Fgithub.com%2Fikhsanalatsary%2Fgithub-repositories-explorer#VITE_GH_SECRET=your_token)
+
 
 ## Prerequisite
 - Node.js v16+ installed
 - Familiar with shell command, React.js, and Node.js knowledge
+- Clone this repository
 - See `.env.example` and copy the variable
 - create `.env` file in the root project directory
 - paste your copy from `.env.example` to `.env` file
 - Create a new GitHub Fine-grained Personal Access Token from your GitHub [settings](https://github.com/settings/tokens?type=beta) and copy the token
 - paste your fine-grained personal access token to `.env` file, just replace the text `REPLACE_WITH_YOUR_FINED_GRAINED_PERSONAL_ACCESS_TOKEN`
+
+## Clone this Repository
+```bash
+git clone https://github.com/ikhsanalatsary/github-repositories-explorer.git --depth 1 && \
+cd github-repositories-explorer
+```
 
 ## Installation
 ```bash
