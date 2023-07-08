@@ -1,6 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { QueryClient, QueryFunction, QueryKey, UseMutateFunction, UseMutationOptions, UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query"
-import { findRepositories, searchUsername, queryKeyRepos, SearchResponse, RepositoryResponse } from "./gh-client"
+import {
+  QueryClient,
+  QueryFunction,
+  QueryKey,
+  UseMutateFunction,
+  UseMutationOptions,
+  UseQueryOptions,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query"
+import { findRepositories, searchUsername, queryKeyRepos, SearchResponse, RepositoryResponse, SearchUsernameType } from "./gh-client"
 import { type RequestError } from "octokit"
 
 export const noop = () => {}
@@ -34,14 +43,14 @@ export const useRQ = <TData = unknown, TKey extends QueryKey = QueryKey, TError 
   options?: UseRQOptions<TData, TKey, TError>
 ) => useQuery<TData, TError, TData, TKey>(queryKey, queryFn, options)
 
-export type SearchMutateFunction = UseMutateFunction<SearchResponse, RequestError, string>
+export type SearchMutateFunction = UseMutateFunction<SearchResponse, RequestError, SearchUsernameType>
 export type UseRQMutationOptions<
   TData = unknown,
   TVariables = unknown,
   TContext = unknown,
   TError extends RequestError = RequestError
 > = UseMutationOptions<TData, TError, TVariables, TContext>
-export type UseSearchUsernameOptions = UseRQMutationOptions<SearchResponse, string>
+export type UseSearchUsernameOptions = UseRQMutationOptions<SearchResponse, SearchUsernameType>
 
 export function useSearchUsername(options?: UseSearchUsernameOptions) {
   return useMutation(searchUsername, options)

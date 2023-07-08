@@ -11,9 +11,11 @@ export const octokit = new Octokit({
 
 export const queryKeyUsers = "GET /search/users"
 export type SearchResponse = Endpoints[typeof queryKeyUsers]["response"]
-export async function searchUsername(q: string) {
+export type SearchUsernameType = { q: string; page?: number }
+export async function searchUsername({q, page = 1}: SearchUsernameType) {
   return octokit.request(queryKeyUsers, {
     q,
+    page,
     headers: defaultHeaders,
   })
 }

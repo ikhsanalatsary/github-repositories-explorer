@@ -18,6 +18,7 @@ import { IconChevronDown, IconStarFilled } from "@tabler/icons-react"
 import { useState } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { SearchMutateFunction, queryClient, useFindRepositories, useSearchUsername } from "./services/query-client"
+import { SearchResponse } from "./services/gh-client"
 
 const useStyles = createStyles((theme) => ({
   root: {
@@ -40,9 +41,10 @@ const useStyles = createStyles((theme) => ({
 }))
 
 type SearchProps = {
-  onSubmit: SearchMutateFunction
+  onSubmit: SearchMutateFunction;
+  reset: () => void;
 }
-function Search({ onSubmit }: SearchProps) {
+function Search({ onSubmit, reset }: SearchProps) {
   const [q, setQuery] = useState("")
   return (
     <form
@@ -50,13 +52,16 @@ function Search({ onSubmit }: SearchProps) {
       onSubmit={(e) => {
         e.preventDefault()
         if (!q) return
-        onSubmit(q)
+        onSubmit({ q })
         setQuery("")
+        reset()
       }}
     >
       <Stack>
         <TextInput placeholder="Enter username" value={q} onChange={(e) => setQuery(e.target.value)} />
-        <Button type="submit" data-testid="search-button">Search</Button>
+        <Button type="submit" data-testid="search-button">
+          Search
+        </Button>
       </Stack>
     </form>
   )
@@ -64,12 +69,43 @@ function Search({ onSubmit }: SearchProps) {
 
 function SearchContent() {
   const { classes } = useStyles()
-  const { mutate, data, isLoading, isError } = useSearchUsername()
+  const [page, setPage] = useState(1)
+  const [data, setData] = useState<SearchResponse | null>(null)
+  const { mutate, isLoading, isError } = useSearchUsername({
+    onSuccess(data) {
+      if (data.data) {
+        setData((prevData) => {
+          if (prevData?.data) {
+            return {
+              ...data,
+              data: {
+                incomplete_results: data.data.incomplete_results,
+                items: prevData.data?.items.concat(data.data.items),
+                total_count: data.data.total_count,
+              },
+            }
+          }
+          return data
+        })
+      }
+    },
+  })
+  const loadMore = (q: string) => {
+    setPage((prevPage) => {
+      const nextPage = prevPage + 1
+      mutate({ q, page: nextPage })
+      return nextPage
+    })
+  }
+  const reset = () => {
+    setPage(1)
+    setData(null)
+  }
   return (
     <Container size="sm" mt="1rem">
       <Stack>
-        <Search onSubmit={mutate} />
-        {isLoading ? (
+        <Search onSubmit={mutate} reset={reset} />
+        {isLoading && page === 1 ? (
           <Center>
             <Loader data-testid="user-loading" />
           </Center>
@@ -81,11 +117,16 @@ function SearchContent() {
           data.data.items.length ? (
             <>
               <Text data-testid="search-result-text">Showing users for "{data.data.items[0].login}"</Text>
-              <Accordion data-testid="result-accordion" classNames={classes} className={classes.root} chevron={<IconChevronDown stroke={2} size="2rem" />}>
+              <Accordion
+                data-testid="result-accordion"
+                classNames={classes}
+                className={classes.root}
+                chevron={<IconChevronDown stroke={2} size="2rem" />}
+              >
                 {data.data.items.map((item, index) => {
                   return (
-                    <Accordion.Item data-testid={'result-accordion-item-'+index} value={item.login} key={item.node_id}>
-                      <Accordion.Control data-testid={'result-accordion-control-'+index} fz="lg" fw={500} tt="capitalize">
+                    <Accordion.Item data-testid={"result-accordion-item-" + index} value={item.login} key={item.node_id}>
+                      <Accordion.Control data-testid={"result-accordion-control-" + index} fz="lg" fw={500} tt="capitalize">
                         {item.login}
                       </Accordion.Control>
                       <Panel username={item.login} />
@@ -93,6 +134,11 @@ function SearchContent() {
                   )
                 })}
               </Accordion>
+              {data.data.total_count > data.data.items.length && (
+                <Button data-testid="search-result-more" onClick={() => loadMore(data.data.items[0].login)} loading={isLoading}>
+                  Load more
+                </Button>
+              )}
             </>
           ) : (
             <Paper shadow="xs" p="lg">
@@ -130,9 +176,11 @@ function Panel({ username }: { username: string }) {
       {data?.data.length ? (
         data.data.map((item, index) => {
           return (
-            <Paper data-testid={'result-panel-paper-'+index} shadow="xs" p="md" pb="lg" mt={8} mb={8} key={item.node_id}>
+            <Paper data-testid={"result-panel-paper-" + index} shadow="xs" p="md" pb="lg" mt={8} mb={8} key={item.node_id}>
               <Group position="apart">
-                <Title data-testid={'result-panel-paper-title-'+index} order={4}>{item.name}</Title>
+                <Title data-testid={"result-panel-paper-title-" + index} order={4}>
+                  {item.name}
+                </Title>
                 <Group spacing="xs">
                   <Title order={4}>{item.stargazers_count}</Title>
                   <IconStarFilled />
